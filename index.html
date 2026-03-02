@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SentimentAI | Intelligence in Every Word</title>
+    <!-- Premium Fonts and Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Auth Section: Login -->
+        <div id="login-section" class="glass-card animate-fade-in">
+            <h1 class="title">SentimentAI</h1>
+            <p class="subtitle">Securely login to begin your analysis journey</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" placeholder="e.g. john_doe" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn">
+                    <span>Login Support</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+            <p class="toggle-link">New here? <span onclick="showSection('signup-section')">Create an account</span></p>
+        </div>
+
+        <!-- Auth Section: Signup -->
+        <div id="signup-section" class="glass-card animate-fade-in hidden">
+            <h1 class="title">Get Started</h1>
+            <p class="subtitle">Join the future of text intelligence</p>
+            <form id="signup-form">
+                <div class="form-group">
+                    <label for="signup-username">Choose Username</label>
+                    <input type="text" id="signup-username" placeholder="Pick a unique name" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Create Password</label>
+                    <input type="password" id="signup-password" placeholder="Min. 8 characters" required>
+                </div>
+                <button type="submit" class="btn">
+                    <span>Sign Up</span>
+                    <i class="fas fa-user-plus"></i>
+                </button>
+            </form>
+            <p class="toggle-link">Already a member? <span onclick="showSection('login-section')">Login</span></p>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="dashboard hidden">
+            <!-- Dataset Management Section -->
+            <div id="dataset-management" class="dataset-section glass-card animate-fade-in"
+                style="margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2 class="title" style="font-size: 1.5rem; text-align: left; margin-bottom: 0;">
+                        <i class="fas fa-database"></i> Knowledge Base
+                    </h2>
+                    <span id="training-badge" class="sentiment-badge sentiment-Neutral"
+                        style="margin-bottom: 0; font-size: 0.75rem;">
+                        <i class="fas fa-check-circle"></i> Ready
+                    </span>
+                </div>
+
+                <div class="upload-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>Upload New Dataset</h3>
+                    <p>Drag & drop your CSV file here or click to browse</p>
+                    <input type="file" id="file-input" accept=".csv" style="display: none;">
+                </div>
+
+                <div id="training-progress" class="progress-details" style="display: none;">
+                    <p id="progress-text" style="font-size: 0.9rem; color: var(--text-muted);">Preparing data engine...
+                    </p>
+                    <div class="progress-container" style="display: block;">
+                        <div id="train-progress-bar" class="progress-bar"></div>
+                    </div>
+                </div>
+
+                <div id="dataset-stats" class="model-stats-grid" style="display: none;">
+                    <div class="stat-card">
+                        <span class="stat-val" id="stat-samples">0</span>
+                        <span class="stat-lbl">Samples</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-val" id="stat-accuracy">0%</span>
+                        <span class="stat-lbl">Avg Accuracy</span>
+                    </div>
+                </div>
+
+                <button id="train-btn" class="btn" style="margin-top: 1rem; display: none;"
+                    onclick="startCustomTraining()">
+                    <i class="fas fa-microchip"></i>
+                    <span>Start Model Training</span>
+                </button>
+            </div>
+
+            <div class="analysis-section glass-card animate-fade-in">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 class="title" style="font-size: 1.8rem; text-align: left; margin-bottom: 0;">Analytics Lab</h2>
+                    <button class="btn"
+                        style="width: auto; padding: 0.6rem 1.2rem; background: transparent; border: 1px solid var(--card-border); font-size: 0.85rem;"
+                        onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label>Input Text Paragraph</label>
+                    <textarea id="text-input" rows="12"
+                        placeholder="Paste or type your text here for real-time sentiment extraction..."></textarea>
+                </div>
+
+                <button class="btn" onclick="analyzeSentiment()">
+                    <i class="fas fa-wand-magic-sparkles"></i>
+                    <span>Analyze Intelligence</span>
+                </button>
+            </div>
+
+            <div class="results-section">
+                <!-- NB Result -->
+                <div class="result-card glass-card animate-fade-in" style="animation-delay: 0.1s;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <h3 style="margin-bottom: 1.25rem; font-size: 1.1rem; color: var(--secondary);">
+                            <i class="fas fa-microchip" style="margin-right: 0.5rem;"></i> Naive Bayes
+                        </h3>
+                    </div>
+                    <div id="nb-result">
+                        <span class="sentiment-badge sentiment-Neutral">
+                            <i class="fas fa-clock"></i> Awaiting Data
+                        </span>
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">Confidence Score: 0%</p>
+                    </div>
+                </div>
+
+                <!-- SVM Result -->
+                <div class="result-card glass-card animate-fade-in" style="animation-delay: 0.2s;">
+                    <h3 style="margin-bottom: 1.25rem; font-size: 1.1rem; color: var(--primary);">
+                        <i class="fas fa-bolt" style="margin-right: 0.5rem;"></i> SVM (Online)
+                    </h3>
+                    <div id="svm-result">
+                        <span class="sentiment-badge sentiment-Neutral">
+                            <i class="fas fa-clock"></i> Awaiting Data
+                        </span>
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">Confidence Score: 0%</p>
+                    </div>
+                </div>
+
+                <!-- Active Learning / Feedback Section -->
+                <div id="feedback-controls" class="result-card glass-card animate-fade-in hidden"
+                    style="animation-delay: 0.25s; border-color: var(--primary-glow);">
+                    <h3 style="font-size: 1rem; margin-bottom: 1rem;"><i class="fas fa-graduation-cap"></i> Teach the
+                        Model</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Model was wrong?
+                        Correct it to train it in real-time:</p>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn"
+                            style="padding: 0.5rem; font-size: 0.8rem; background: rgba(16, 185, 129, 0.2); color: #10b981;"
+                            onclick="submitFeedback('Positive')">Positive</button>
+                        <button class="btn"
+                            style="padding: 0.5rem; font-size: 0.8rem; background: rgba(100, 116, 139, 0.2); color: #94a3b8;"
+                            onclick="submitFeedback('Neutral')">Neutral</button>
+                        <button class="btn"
+                            style="padding: 0.5rem; font-size: 0.8rem; background: rgba(239, 68, 68, 0.2); color: #ef4444;"
+                            onclick="submitFeedback('Negative')">Negative</button>
+                    </div>
+                </div>
+
+                <!-- Model Comparison Chart -->
+                <div class="result-card glass-card animate-fade-in" style="animation-delay: 0.3s;">
+                    <h3 style="margin-bottom: 0.75rem; font-size: 1.1rem;">
+                        <i class="fas fa-chart-simple" style="margin-right: 0.5rem;"></i> Model Accuracy
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="accuracyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+
+</html>
