@@ -48,7 +48,24 @@ Publish your app online in 3 easy steps:
     - Log in to [Render](https://render.com).
     - Click **New +** > **Blueprint**.
     - Connect your GitHub repository.
-3.  **Deploy**: Render will automatically detect the `render.yaml` file and set up the Python environment, install dependencies, and start your server.
+3.  **Deploy (Option A: Blueprint)**: Render will automatically detect `render.yaml` and set up everything.
+4.  **Deploy (Option B: Manual Web Service)**: If you've reached your Blueprint limit:
+    - Click **New +** > **Web Service**.
+    - Connect your GitHub repo.
+    - **Runtime**: `Python 3`
+    - **Build Command**: `pip install -r requirements.txt`
+    - **Start Command**: `uvicorn app:app --host 0.0.0.0 --port $PORT`
+
+## ⚡ 7. How to Deploy on Vercel
+You can also deploy to Vercel, but with **important limitations**:
+
+1.  **Read-Only Filesystem**: Vercel does not allow saving files. **Online Learning**, **Custom Dataset Uploads**, and **User Accounts** will not persist. The model will reset to its initial state every time the app restarts.
+2.  **Deployment Steps**:
+    - Push your code to GitHub (as described in section 6).
+    - Log in to [Vercel](https://vercel.com).
+    - Click **Add New** > **Project**.
+    - Import your GitHub repository.
+    - Vercel will detect `vercel.json` and deploy it automatically.
 
 ---
-**Note on Persistence**: Render's free tier uses ephemeral storage. This means user accounts and custom datasets created while the app is running on Render will be lost when the server restarts. For permanent storage, consider using Render's "Disks" or an external database like MongoDB/PostgreSQL.
+**🏆 Recommendation**: Use **Render** for this project. It supports a persistent filesystem which is required for the machine learning model to learn and grow over time.
