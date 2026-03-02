@@ -11,8 +11,7 @@ import threading
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.svm import LinearSVC
-from sklearn.calibration import CalibratedClassifierCV
+from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import accuracy_score
 from fastapi import UploadFile, File
 from fastapi.staticfiles import StaticFiles
@@ -91,12 +90,11 @@ async def get_training_status():
     return training_state
 
 def perform_custom_training(file_path: str):
-    """Robust training on custom uploaded CSV."""
+    """Robust training on custom uploaded CSV - FAST VERSION."""
     global nb_model, svm_model, vectorizer, metrics, training_state
     try:
         training_state["progress"] = 25
-        # 1. Load data - handle both headered and headerless
-        # Assuming the format: [text/id, entity, sentiment, text] OR [sentiment, text]
+        # 1. Load data
         df = pd.read_csv(file_path, header=None)
         
         # Auto-detect format
@@ -105,32 +103,34 @@ def perform_custom_training(file_path: str):
         elif len(df.columns) == 2:
             df.columns = ['sentiment', 'text']
         else:
-             # Try to find columns with string content
              raise Exception("Unsupported CSV format. Use 2 columns (sentiment, text) or 4 columns.")
 
         df = df[df['sentiment'].isin(['Positive', 'Negative', 'Neutral'])]
         df = df.dropna(subset=['text'])
         df['text'] = df['text'].str.lower()
         
+        # SAMPLING: Cap at 15,000 for custom data to balance speed and depth
+        if len(df) > 15000:
+            df = df.sample(n=15000, random_state=42)
+            
         training_state["samples"] = len(df)
         training_state["progress"] = 40
         
         X = df['text']
         y = df['sentiment']
         
-        # 2. Vectorization
-        new_vec = TfidfVectorizer(ngram_range=(1, 2), max_features=10000, sublinear_tf=True)
+        # 2. Optimized Vectorization
+        new_vec = TfidfVectorizer(ngram_range=(1, 2), max_features=6000, sublinear_tf=True)
         X_vec = new_vec.fit_transform(X)
         X_train, X_test, y_train, y_test = train_test_split(X_vec, y, test_size=0.15, random_state=42)
         
         training_state["progress"] = 60
         
-        # 3. Models
+        # 3. Fast SGD instead of slow calibrated SVM
         new_nb = MultinomialNB(alpha=0.1)
         new_nb.fit(X_train, y_train)
         
-        base_svm = LinearSVC(C=1.0, class_weight='balanced', max_iter=2000, dual='auto')
-        new_svm = CalibratedClassifierCV(base_svm, cv=3)
+        new_svm = SGDClassifier(loss='modified_huber', max_iter=1000, tol=1e-3, class_weight='balanced', random_state=42)
         new_svm.fit(X_train, y_train)
         
         training_state["progress"] = 85
@@ -198,9 +198,9 @@ class FeedbackRequest(BaseModel):
     sentiment: str
 
 def perform_robust_retrain():
-    """Background task to re-calibrate models with feedback oversampling."""
+    """Background task to re-calibrate models with feedback oversampling - FAST VERSION."""
     global nb_model, svm_model, vectorizer, metrics
-    print("Priority retraining cycle started...")
+    print("Fast retraining cycle started...")
     
     try:
         # Load data
@@ -210,31 +210,33 @@ def perform_robust_retrain():
         df['text'] = df['text'].str.lower()
         
         # Split into base data and manual feedback
-        # feedback rows were marked with entity='Feedback' in submit_feedback
         df_base = df[df['entity'] != 'Feedback']
         df_feedback = df[df['entity'] == 'Feedback']
         
-        # OVERSAMPLING: Make user feedback 100x more influential
+        # OVERSAMPLING + DATA CAPPING: Maintain speed even with large history
+        # Cap base data at 10,000 samples for speed
+        df_base_sampled = df_base.sample(n=min(len(df_base), 10000), random_state=42)
+        
         if not df_feedback.empty:
             print(f"Oversampling {len(df_feedback)} manual corrections...")
-            df_feedback_boosted = pd.concat([df_feedback] * 100, ignore_index=True)
-            df_final = pd.concat([df_base.sample(n=min(len(df_base), 15000), random_state=42), df_feedback_boosted])
+            df_feedback_boosted = pd.concat([df_feedback] * 50, ignore_index=True) # 50x is enough
+            df_final = pd.concat([df_base_sampled, df_feedback_boosted])
         else:
-            df_final = df_base.sample(n=min(len(df_base), 20000), random_state=42)
+            df_final = df_base_sampled
             
         X = df_final['text']
         y = df_final['sentiment']
         
-        # Vectorization (keep consistent)
-        new_vec = TfidfVectorizer(ngram_range=(1, 2), max_features=10000, sublinear_tf=True)
+        # Optimized Vectorization (6k features is fast and accurate)
+        new_vec = TfidfVectorizer(ngram_range=(1, 2), max_features=6000, sublinear_tf=True)
         X_vec = new_vec.fit_transform(X)
         X_train, X_test, y_train, y_test = train_test_split(X_vec, y, test_size=0.15, random_state=42)
         
         new_nb = MultinomialNB(alpha=0.1)
         new_nb.fit(X_train, y_train)
         
-        base_svm = LinearSVC(C=1.0, class_weight='balanced', max_iter=2000, dual='auto')
-        new_svm = CalibratedClassifierCV(base_svm, cv=3)
+        # Lighter but robust SGD with Huber loss for built-in probability support
+        new_svm = SGDClassifier(loss='modified_huber', max_iter=1000, tol=1e-3, class_weight='balanced', random_state=42)
         new_svm.fit(X_train, y_train)
         
         # Re-calc metrics on a clean test set
@@ -249,7 +251,7 @@ def perform_robust_retrain():
             joblib.dump(vectorizer, VEC_FILE)
             joblib.dump(metrics, METRICS_FILE)
             
-        print(f"Retrain Success! New Metrics: NB={nb_acc:.2f}, SVM={svm_acc:.2f}")
+        print(f"Fast Retrain Success! NB={nb_acc:.2f}, SGD={svm_acc:.2f}")
     except Exception as e:
         print(f"Retrain Error: {e}")
 

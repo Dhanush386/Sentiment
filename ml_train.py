@@ -3,8 +3,7 @@ import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.svm import LinearSVC
-from sklearn.calibration import CalibratedClassifierCV
+from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import accuracy_score
 import os
 
@@ -25,8 +24,8 @@ def train_models():
     X = df['text']
     y = df['sentiment']
 
-    print("Vectorizing...")
-    vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_features=10000, sublinear_tf=True)
+    print("Vectorizing (Optimized)...")
+    vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_features=6000, sublinear_tf=True)
     X_vec = vectorizer.fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_vec, y, test_size=0.15, random_state=42)
 
@@ -36,10 +35,9 @@ def train_models():
     nb_model.fit(X_train, y_train)
     nb_acc = accuracy_score(y_test, nb_model.predict(X_test))
 
-    # 2. SVM (LinearSVC with Calibration for probabilities)
-    print("Training High-Accuracy Linear SVM...")
-    base_svm = LinearSVC(C=1.0, class_weight='balanced', max_iter=2000, dual='auto')
-    svm_model = CalibratedClassifierCV(base_svm, cv=3)
+    # 2. Fast SGD (Modified Huber for probabilities)
+    print("Training Fast SGD SVM...")
+    svm_model = SGDClassifier(loss='modified_huber', max_iter=1000, tol=1e-3, class_weight='balanced', random_state=42)
     svm_model.fit(X_train, y_train)
     svm_acc = accuracy_score(y_test, svm_model.predict(X_test))
 
