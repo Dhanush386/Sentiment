@@ -63,12 +63,20 @@ async def upload_dataset(file: UploadFile = File(...)):
              os.remove(file_path)
              raise HTTPException(status_code=400, detail="CSV must have at least 'sentiment' and 'text' columns")
         
-        # Get actual sample count
+        # Get actual sample count and distribution
         full_df = pd.read_csv(file_path, header=None)
+        if len(full_df.columns) == 4:
+            full_df.columns = ['id', 'entity', 'sentiment', 'text']
+        elif len(full_df.columns) == 2:
+            full_df.columns = ['sentiment', 'text']
+            
+        dist = full_df['sentiment'].value_counts().to_dict()
+        
         return {
             "message": "Dataset uploaded successfully", 
             "filename": "custom_dataset.csv",
-            "samples": len(full_df)
+            "samples": len(full_df),
+            "distribution": dist
         }
     except Exception as e:
         if os.path.exists(file_path): os.remove(file_path)

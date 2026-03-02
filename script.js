@@ -1,5 +1,6 @@
 const API_BASE = '';
 let accuracyChart = null;
+let distChart = null;
 
 // UI Navigation
 function showSection(id) {
@@ -267,6 +268,12 @@ async function handleFileUpload(file) {
             document.getElementById('stat-samples').textContent = data.samples;
             document.getElementById('training-badge').className = 'sentiment-badge sentiment-Positive';
             document.getElementById('training-badge').innerHTML = '<i class="fas fa-file-import"></i> Loaded';
+
+            // Render Distribution Chart
+            if (data.distribution) {
+                document.getElementById('distribution-chart-container').style.display = 'block';
+                renderDistChart(data.distribution);
+            }
         } else {
             alert(data.detail || "Upload failed");
             dropZone.innerHTML = originalHTML;
@@ -275,6 +282,62 @@ async function handleFileUpload(file) {
         alert("Server error during upload");
         dropZone.innerHTML = originalHTML;
     }
+}
+
+function renderDistChart(distribution) {
+    const ctx = document.getElementById('distChart').getContext('2d');
+    if (distChart) distChart.destroy();
+
+    const labels = Object.keys(distribution);
+    const counts = Object.values(distribution);
+
+    const colors = {
+        'Positive': '#10b981',
+        'Negative': '#ef4444',
+        'Neutral': '#94a3b8'
+    };
+
+    const backgroundColors = labels.map(l => colors[l] || '#818cf8');
+
+    distChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Samples',
+                data: counts,
+                backgroundColor: backgroundColors,
+                borderRadius: 10,
+                barThickness: 32
+            }]
+        },
+        options: {
+            indexAxis: 'y', // Makes it a horizontal bar chart
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { color: '#94a3b8', font: { size: 10 } }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: '#f8fafc', font: { weight: '600', size: 11 } }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleFont: { family: 'Outfit', size: 14 },
+                    bodyFont: { family: 'Inter', size: 12 },
+                    padding: 12,
+                    cornerRadius: 8
+                }
+            }
+        }
+    });
 }
 
 async function startCustomTraining() {
