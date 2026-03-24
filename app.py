@@ -19,12 +19,17 @@ from fastapi import UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import shutil
+import sys
+import logging
+
+# Configure logging to stdout for Render
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# Mount static files (ensure style.css, script.js are in the same folder)
-# In production, we'll serve index.html directly from root
-app.mount("/static", StaticFiles(directory="."), name="static")
+# Mount static files (ensure style.css, script.js are in the 'static' folder)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -214,7 +219,12 @@ def load_all_models():
         print(f"Initial load failed: {e}")
         return None, None, None, None
 
-nb_model, svm_model, vectorizer, metrics = load_all_models()
+try:
+    nb_model, svm_model, vectorizer, metrics = load_all_models()
+    logger.info("Models loaded successfully.")
+except Exception as e:
+    logger.error(f"FATAL: Could not load models during startup: {e}")
+    nb_model, svm_model, vectorizer, metrics = None, None, None, None
 
 def init_db():
     try:
