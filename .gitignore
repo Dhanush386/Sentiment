@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+.env
+.DS_Store
+# Large datasets can be ignored if you prefer, but 10MB is okay for GitHub.
+# However, users.db might change, so it's often ignored.
+# For now, we will leave them out of .gitignore to match your "transfer" request.
