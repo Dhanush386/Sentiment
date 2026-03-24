@@ -65,9 +65,11 @@ class DBUser(Base):
     username = Column(String, primary_key=True, index=True)
     password = Column(String)
 
+from sqlalchemy import Column, String, DateTime, Integer, text
+
 class DBFeedback(Base):
     __tablename__ = "feedback"
-    id = Column(String, primary_key=True, server_default=text("gen_random_uuid()")) # Postgres specific
+    id = Column(Integer, primary_key=True, autoincrement=True)
     text = Column(String)
     sentiment = Column(String)
     timestamp = Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
