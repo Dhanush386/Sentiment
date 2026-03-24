@@ -40,18 +40,29 @@ app.add_middleware(
 
 @app.get("/")
 async def read_index():
-    return FileResponse(os.path.join(BASE_DIR, 'index.html'))
+    if not os.path.exists(INDEX_HTML):
+        return {"error": f"index.html not found in {BASE_DIR}"}
+    return FileResponse(INDEX_HTML)
+
+@app.get("/favicon.ico")
+async def favicon():
+    return FileResponse(os.path.join(BASE_DIR, "static", "style.css")) # Dummy to stop 404
 
 # Configuration and Path Handling
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Detailed logging for paths
+logger.info(f"App starting from BASE_DIR: {BASE_DIR}")
+logger.info(f"Contents of BASE_DIR: {os.listdir(BASE_DIR)}")
 
 NB_MODEL_FILE = os.path.join(BASE_DIR, 'nb_model.pkl')
 SVM_MODEL_FILE = os.path.join(BASE_DIR, 'svm_model.pkl')
 VEC_FILE = os.path.join(BASE_DIR, 'vectorizer.pkl')
 METRICS_FILE = os.path.join(BASE_DIR, 'model_metrics.pkl')
 CSV_PATH = os.path.join(BASE_DIR, 'twitter_training.csv')
+INDEX_HTML = os.path.join(BASE_DIR, 'index.html')
 
 # Database Configuration
+# ... (rest of DB config)
 # NOTE: The password has an @, so it's safer to use DATABASE_URL env var on Vercel
 DEFAULT_DATABASE_URL = "postgresql://postgres.ucqpzgzantpgtrfammvk:Dhanush%402404@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres"
 DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
