@@ -4,7 +4,7 @@ from pydantic import BaseModel
 import joblib
 import pandas as pd
 from passlib.context import CryptContext
-from sqlalchemy import create_engine, Column, String, DateTime, text
+from sqlalchemy import create_engine, Column, String, DateTime, Integer, text as sa_text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
@@ -65,14 +65,13 @@ class DBUser(Base):
     username = Column(String, primary_key=True, index=True)
     password = Column(String)
 
-from sqlalchemy import Column, String, DateTime, Integer, text
 
 class DBFeedback(Base):
     __tablename__ = "feedback"
     id = Column(Integer, primary_key=True, autoincrement=True)
     text = Column(String)
     sentiment = Column(String)
-    timestamp = Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
+    timestamp = Column(DateTime, server_default=sa_text("CURRENT_TIMESTAMP"))
 
 def init_db():
     try:
