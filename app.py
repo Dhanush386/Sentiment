@@ -139,6 +139,8 @@ async def get_training_status():
 def perform_custom_training(file_path: str):
     """Robust training on custom uploaded CSV - FAST VERSION."""
     global nb_model, svm_model, vectorizer, metrics, training_state
+    # Ensure current models are at least loaded once before overwriting
+    _ = get_models()
     try:
         training_state["progress"] = 25
         # 1. Load data
@@ -220,24 +222,22 @@ def load_all_models():
         print(f"Initial load failed: {e}")
         return None, None, None, None
 
-try:
-    nb_model, svm_model, vectorizer, metrics = load_all_models()
-    logger.info("Models loaded successfully.")
-except Exception as e:
-    logger.error(f"FATAL: Could not load models during startup: {e}")
-    nb_model, svm_model, vectorizer, metrics = None, None, None, None
+# Global model variables
+nb_model = None
+svm_model = None
+vectorizer = None
+metrics = None
 
-def init_db():
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        conn.execute('CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT)')
-        conn.execute('CREATE TABLE IF NOT EXISTS feedback (text TEXT, sentiment TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)')
-        conn.commit()
-        conn.close()
-    except sqlite3.OperationalError as e:
-        print(f"Database initialization warning (likely read-only on Vercel): {e}")
+def get_models():
+    global nb_model, svm_model, vectorizer, metrics
+    if nb_model is None:
+        try:
+            nb_model, svm_model, vectorizer, metrics = load_all_models()
+            logger.info("Models loaded successfully.")
+        except Exception as e:
+            logger.error(f"Error loading models: {e}")
+    return nb_model, svm_model, vectorizer, metrics
 
-init_db()
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
@@ -255,6 +255,8 @@ class FeedbackRequest(BaseModel):
 def perform_robust_retrain():
     """Background task to re-calibrate models with feedback oversampling - FAST VERSION."""
     global nb_model, svm_model, vectorizer, metrics
+    # Ensure current models are at least loaded once before overwriting
+    _ = get_models()
     print("Fast retraining cycle started...")
     
     try:
@@ -358,9 +360,13 @@ def analyze_sentiment(request: SentimentRequest):
             "metrics": metrics
         }
 
+    nb_model, svm_model, vectorizer, metrics = get_models()
     with model_lock:
         if not nb_model or not svm_model or not vectorizer:
-            raise HTTPException(status_code=500, detail="Models not ready")
+             # Try one more time
+             nb_model, svm_model, vectorizer, metrics = get_models()
+             if not nb_model:
+                raise HTTPException(status_code=500, detail="Models not ready")
         
         X_vec = vectorizer.transform([request.text.lower()]) # Ensure lower
         
