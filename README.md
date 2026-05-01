@@ -1,8 +1,8 @@
-# 🤖 SentimentAI | Project Setup & Transfer Guide
+# SentimentAI | Project Setup & Transfer Guide
 
 This guide will help you move and set up the Sentiment Analysis project on a new laptop.
 
-## 📦 1. Files to Copy
+##  1. Files to Copy
 Copy the entire project folder. Ensure these essential files are included:
 - **Backend**: `app.py`
 - **Training**: `ml_train.py`
@@ -11,10 +11,10 @@ Copy the entire project folder. Ensure these essential files are included:
 - **Trained Models**: `nb_model.pkl`, `svm_model.pkl`, `vectorizer.pkl`, `model_metrics.pkl`
 - **Database**: `users.db` (Contains user accounts and feedback history)
 
-## 🛠️ 2. Prerequisites
+##  2. Prerequisites
 Ensure the new laptop has **Python 3.8+** installed. You can check this by running `python --version` in your terminal.
 
-## 🚀 3. Installation Steps
+##  3. Installation Steps
 
 1. **Open your terminal** (Command Prompt or PowerShell) inside the project folder.
 2. **Install all required libraries** by running this command:
@@ -22,7 +22,7 @@ Ensure the new laptop has **Python 3.8+** installed. You can check this by runni
    pip install fastapi uvicorn scikit-learn pandas joblib passlib[pbkdf2] python-multipart
    ```
 
-## 🏃 4. How to Run the App
+##  4. How to Run the App
 
 1. **Start the Backend Server**:
    ```bash
@@ -33,14 +33,14 @@ Ensure the new laptop has **Python 3.8+** installed. You can check this by runni
 2. **Open the Frontend**:
    Simply open the `index.html` file in any modern web browser (Chrome, Edge, etc.).
 
-## 🎓 5. Machine Learning Notes
+##  5. Machine Learning Notes
 - If you ever want to reset the models to their original state, delete the `.pkl` files and run:
   ```bash
   python ml_train.py
   ```
 - The app supports **Online Learning**. When you provide feedback in the UI, it appends data to `twitter_training.csv` and retrains the model in the background.
 
-## ☁️ 6. How to Deploy on Render
+## 6. How to Deploy on Render
 Publish your app online in 3 easy steps:
 
 1.  **Push to GitHub**: Create a repository on GitHub and push all your project files there.
@@ -56,7 +56,7 @@ Publish your app online in 3 easy steps:
     - **Build Command**: `pip install -r requirements.txt`
     - **Start Command**: `uvicorn app:app --host 0.0.0.0 --port $PORT`
 
-## ⚡ 7. How to Deploy on Vercel
+##  7. How to Deploy on Vercel
 You can also deploy to Vercel, but with **important limitations**:
 
 1.  **Read-Only Filesystem**: Vercel does not allow saving files. **Online Learning**, **Custom Dataset Uploads**, and **User Accounts** will not persist. The model will reset to its initial state every time the app restarts.
@@ -68,4 +68,4 @@ You can also deploy to Vercel, but with **important limitations**:
     - Vercel will detect `vercel.json` and deploy it automatically.
 
 ---
-**🏆 Recommendation**: Use **Render** for this project. It supports a persistent filesystem which is required for the machine learning model to learn and grow over time.
+** Recommendation**: Use **Render** for this project. It supports a persistent filesystem which is required for the machine learning model to learn and grow over time.
